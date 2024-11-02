@@ -1,0 +1,33 @@
+datasource db {
+  provider = "sqlite" // Você pode escolher outro banco, como PostgreSQL ou MySQL
+  url      = "file:./dev.db" // Armazena o banco de dados SQLite no arquivo dev.db
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  username String   @unique
+  password String
+  imoveis  Imovel[] @relation("UserImoveis") // Relacionamento com Imovel
+}
+
+model Imovel {
+  id        Int      @id @default(autoincrement())
+  titulo    String
+  descricao String
+  userId    Int // ID do usuário que possui o imóvel
+  user      User     @relation("UserImoveis", fields: [userId], references: [id]) // Relacionamento com User
+  imagens   Imagem[] // Relacionamento com Imagem
+  latitude  Float    @default(0.0) // Valor padrão temporário
+  longitude Float    @default(0.0) // Valor padrão temporário
+}
+
+model Imagem {
+  id       Int    @id @default(autoincrement())
+  url      String
+  imovelId Int // ID do imóvel relacionado
+  imovel   Imovel @relation(fields: [imovelId], references: [id]) // Relacionamento com Imovel
+}
