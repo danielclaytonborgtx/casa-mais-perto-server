@@ -11,28 +11,29 @@ datasource db {
 }
 
 model User {
-  id         Int @id @default(autoincrement())
+  id         Int        @id @default(autoincrement())
   name       String
-  email      String  @unique
-  username   String  @unique
+  email      String     @unique
+  username   String     @unique
   password   String
+  picture    String?
   properties Property[]
 }
 
 model Property {
-  id           Int      @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   title        String
   description  String
   price        Float
-  latitude     Float    @default(0.0) // Valor padrão temporário
-  longitude    Float    @default(0.0) // Valor padrão temporário
+  latitude     Float   @default(0.0) // Valor padrão temporário
+  longitude    Float   @default(0.0) // Valor padrão temporário
   userId       Int // ID do usuário que possui o imóvel
-  userProperty User @relation(fields: [userId], references: [id])
+  userProperty User    @relation(fields: [userId], references: [id])
   images       Image[]
 }
 
 model Image {
-  id         Int    @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   url        String
   propertyId Int // ID do imóvel relacionado
   property   Property @relation(fields: [propertyId], references: [id]) // Relacionamento com Imovel

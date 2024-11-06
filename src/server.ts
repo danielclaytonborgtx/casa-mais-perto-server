@@ -3,9 +3,13 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import Joi from "joi";
+import { google } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
 
 const server = Fastify();
 const prisma = new PrismaClient();
+
+const client = new OAuth2Client('468088106800-vrpeq16jtc739ngvvvf3a8mrdbpd5is5.apps.googleusercontent.com');
 
 // Habilitar CORS
 server.register(cors, {
@@ -99,7 +103,7 @@ server.post(
   }
 );
 
-// Rota de login
+// Rota de login via e-mail e senha
 server.post(
   "/session",
   async (
@@ -127,6 +131,49 @@ server.post(
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       return reply.status(500).send({ error: "Falha ao fazer login" });
+    }
+  }
+);
+
+// Rota de login com Google (ID Token)
+server.post(
+  "/google-login",
+  async (request: FastifyRequest<{ Body: { id_token: string } }>, reply: FastifyReply) => {
+    const { id_token } = request.body;
+
+    try {
+      // Verificar o ID token do Google
+      const ticket = await google.auth.OAuth2.verifyIdToken({
+        idToken: id_token,
+        audience: '468088106800-vrpeq16jtc739ngvvvf3a8mrdbpd5is5.apps.googleusercontent.com', // Substitua com seu ID do Google
+      });
+
+      const payload = ticket.getPayload();
+
+      if (payload) {
+        // Gerar uma senha temporária ou aleatória (no login com Google a senha é irrelevante)
+        const tempPassword = Math.random().toString(36).slice(-8); // Gerar uma senha aleatória (exemplo)
+
+        // Verifique ou crie um usuário baseado no payload do Google
+        const user = await prisma.user.upsert({
+          where: { email: payload.email }, // Tente encontrar o usuário pelo email
+          update: {}, // Atualize com nada
+          create: {
+            email: payload.email,
+            username: payload.email,  // ou payload.name, se preferir
+            name: payload.name,
+            picture: payload.picture,
+            password: await bcrypt.hash(tempPassword, 10), // Cria uma senha com hash para o usuário
+          },
+        });
+
+        return reply.send({ message: "Login successful", user });
+      }
+
+      return reply.status(400).send({ error: 'Google login failed' });
+    } catch (error) {
+      console.error('Erro ao autenticar com o Google:', error);
+      return reply.status(500).send({ error: 'Erro no login com o Google' });
     }
   }
 );

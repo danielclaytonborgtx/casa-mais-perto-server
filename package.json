@@ -21,6 +21,8 @@
     "express": "^4.21.1",
     "fastify": "^3.29.5",
     "fastify-multipart": "^5.3.1",
+    "google-auth-library": "^9.14.2",
+    "googleapis": "^144.0.0",
     "joi": "^17.13.3",
     "mongoose": "^8.7.3"
   },
